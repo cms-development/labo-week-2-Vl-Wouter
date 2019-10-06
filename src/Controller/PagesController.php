@@ -19,7 +19,7 @@ class PagesController extends AbstractController
      * @return Response
      */
     public function index() {
-        $camps = $this->getDoctrine()->getRepository(Camp::class)->findAll();
+        $camps = $this->getDoctrine()->getRepository(Camp::class)->findBy(array(), array('id' => 'desc'), 4);
         $featured = $this->getDoctrine()->getRepository(Camp::class)->findBy(["featured" => 1]);
         shuffle($featured);
 
