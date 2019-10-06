@@ -59,6 +59,7 @@ class PagesController extends AbstractController
 
             $camp = new Camp();
             $camp->setTitle($_POST["title"]);
+            $camp->setSlug(strtolower(str_replace(" ", "-", $_POST['title'])));
             $camp->setAuthor("TestGebruiker");
             $camp->setQuote($_POST["quote"]);
             $camp->setDate(new DateTime($_POST["date"]));
