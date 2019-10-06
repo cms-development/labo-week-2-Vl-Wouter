@@ -55,7 +55,6 @@ class PagesController extends AbstractController
         if($r->isMethod('GET')) {
             return $this->render('cms/campForm.html.twig');
         } else if($r->isMethod('POST')) {
-            var_dump($_POST);
             $manager = $this->getDoctrine()->getManager();
 
             $camp = new Camp();

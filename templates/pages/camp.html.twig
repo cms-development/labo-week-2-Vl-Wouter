@@ -12,10 +12,10 @@
                                 <span class="show-article-title ">{{ camp.title }}</span>
                                 <br>
                                 <span class="align-left article-details"><img class="article-author-img rounded-circle" src="{{ asset('images/alien-profile.png') }}"> {{ camp.author }} </span>
-                                <span class="pl-2 article-details"> {{ camp.date|date }}</span>
+                                <span class="pl-2 article-details"> {{ camp.date|date("d M Y") }}</span>
                                 <span class="pl-2 article-details">
                                     <span id="like-counter">{{ camp.likes }}</span>
-                                    <a href="/news/krabpaaljongleren/heart" id="like-heart-button" class="fa fa-heart-o like-article"></a>
+                                    <a href="" id="like-heart-button" class="fa like-article"></a>
                                 </span>
                             </div>
                         </div>
@@ -34,60 +34,99 @@
                     </div>
                     <div class="row">
                         <div class="col-sm-12">
-                            <h3><i class="pr-3 fa fa-comment"></i>3 Reacties</h3>
+                            <h3><i class="pr-3 fa fa-comment"></i>{{ camp.comments|length }} Reacties</h3>
                             <hr>
 
                             <div class="row mb-5">
                                 <div class="col-sm-12">
-                                    <img class="comment-img rounded-circle" src="images/astronaut-profile.png">
+                                    <img class="comment-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
                                     <div class="comment-container d-inline-block pl-3 align-top">
-                                        <span class="commenter-name">Amy Oort</span>
-                                        <div class="form-group">
-                                            <textarea class="form-control comment-form" id="articleText" rows="1"></textarea>
-                                        </div>
-                                        <button type="submit" class="btn btn-info">Plaats reactie</button>
+                                        <form action="{{ path('addComment', {camp_id: camp.id}) }}" method="post">
+                                            <div class="form-group">
+                                                <input type="text" name="author" id="name" class="form-control" placeholder="Name">
+                                            </div>
+                                            <div class="form-group">
+                                                <textarea class="form-control comment-form" name="content" id="articleText" rows="1"></textarea>
+                                            </div>
+                                            <button type="submit" class="btn btn-info">Plaats reactie</button>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
 
+                            {% for comment in camp.comments %}
+
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <img class="comment-img rounded-circle" src="images/alien-profile.png">
+                                    <img class="comment-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
                                     <div class="comment-container d-inline-block pl-3 align-top">
-                                        <span class="commenter-name">Mike Ferengi</span>
+                                        <span class="commenter-name">{{ comment.author }}</span>
                                         <br>
-                                        <span class="comment"> hello world</span>
-                                        <p><a href="#">Reageer</a></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <img class="comment-img rounded-circle" src="images/alien-profile.png">
-                                    <div class="comment-container d-inline-block pl-3 align-top">
-                                        <span class="commenter-name">Mike Ferengi</span>
-                                        <br>
-                                        <span class="comment"> hello space</span>
-                                        <p><a href="#">Reageer</a></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <img class="comment-img rounded-circle" src="images/alien-profile.png">
-                                    <div class="comment-container d-inline-block pl-3 align-top">
-                                        <span class="commenter-name">Mike Ferengi</span>
-                                        <br>
-                                        <span class="comment"> hello universe</span>
+                                        <span class="comment"> {{ comment.content }}</span>
                                         <p><a href="#">Reageer</a></p>
                                     </div>
                                 </div>
                             </div>
 
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+
+        const likeBtn = document.querySelector("#like-heart-button")
+
+        const changeIcon = (status) => {
+            console.log(status)
+            if(status !== false) {
+                likeBtn.classList.remove("fa-heart-o")
+                likeBtn.classList.add("fa-heart")
+            } else {
+                likeBtn.classList.remove("fa-heart")
+                likeBtn.classList.add("fa-heart-o")
+            }
+        }
+
+        async function changeLike () {
+            let like
+            if(window.localStorage.getItem("{{ camp.slug }}")) {
+                like = JSON.parse(window.localStorage.getItem("{{ camp.slug }}"))
+            } else {
+                like = false
+            }
+            let url = '{{ path("likeCamp", {slug: camp.slug, status: 'likeStatus'}) }}'
+            url = url.replace('likeStatus', like)
+            const status = await fetch(url, {
+                method: 'GET',
+            })
+            const newStatus = await status.json()
+            changeIcon(newStatus.status)
+            window.localStorage.setItem("{{ camp.slug }}", JSON.stringify(newStatus.status))
+        }
+
+        likeBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            changeLike()
+        })
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let status
+            if(window.localStorage.getItem("{{ camp.slug }}")) {
+                status = JSON.parse(window.localStorage.getItem("{{ camp.slug }}"))
+                console.log(status)
+                changeIcon(status)
+            } else {
+                likeBtn.classList.add("fa-heart-o")
+            }
+        })
+
+
+    </script>
 {% endblock %}

@@ -5,9 +5,9 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\CommentsRepository")
+ * @ORM\Entity(repositoryClass="App\Repository\CommentRepository")
  */
-class Comments
+class Comment
 {
     /**
      * @ORM\Id()
@@ -27,7 +27,8 @@ class Comments
     private $content;
 
     /**
-     * @ORM\Column(type="integer")
+     * @ORM\ManyToOne(targetEntity="App\Entity\Camp", inversedBy="comments")
+     * @ORM\JoinColumn(nullable=false)
      */
     private $camp_id;
 
@@ -60,12 +61,12 @@ class Comments
         return $this;
     }
 
-    public function getCampId(): ?int
+    public function getCampId(): ?Camp
     {
         return $this->camp_id;
     }
 
-    public function setCampId(int $camp_id): self
+    public function setCampId(?Camp $camp_id): self
     {
         $this->camp_id = $camp_id;
 
