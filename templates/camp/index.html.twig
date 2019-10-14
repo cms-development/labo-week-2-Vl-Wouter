@@ -1,0 +1,34 @@
+{% extends 'cms.html.twig' %}
+
+{% block title %}CMS{% endblock %}
+
+{% block body %}
+<div class="container mt-3">
+    <table class="table table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>id</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for camp in camps %}
+                <tr>
+                    <td>{{ camp.id }}</td>
+                    <td>{{ camp.title }}</td>
+                    <td>{{ camp.author }}</td>
+                    <td>{{ camp.date|date }}</td>
+                    <td>{{ camp.translations['nl'].description }}</td>
+                    <td>
+                        <a href="">Edit</a> | <a href="{{ path('removeCamp', {'id': camp.id}) }}">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

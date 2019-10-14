@@ -5,12 +5,19 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Knp\DoctrineBehaviors\Model\Sortable\Sortable;
+use Knp\DoctrineBehaviors\Model\Timestampable\Timestampable;
+use Knp\DoctrineBehaviors\Model\Translatable\Translatable;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CampRepository")
  */
 class Camp
 {
+    use Timestampable;
+    use Translatable;
+    use Sortable;
+
     /**
      * @ORM\Id()
      * @ORM\GeneratedValue()
@@ -21,17 +28,12 @@ class Camp
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $title;
-
-    /**
-     * @ORM\Column(type="string", length=45)
-     */
     private $author;
 
     /**
      * @ORM\Column(type="string", length=255)
      */
-    private $quote;
+    private $title;
 
     /**
      * @ORM\Column(type="date")
@@ -54,17 +56,7 @@ class Camp
     private $likes;
 
     /**
-     * @ORM\Column(type="text")
-     */
-    private $description;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $slug;
-
-    /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="camp_id", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity="App\Entity\Comment", mappedBy="camp", orphanRemoval=true)
      */
     private $comments;
 
@@ -78,19 +70,6 @@ class Camp
         return $this->id;
     }
 
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    public function setTitle(string $title): self
-    {
-        $this->title = $title;
-
-        return $this;
-    }
-
-
     public function getAuthor(): ?string
     {
         return $this->author;
@@ -103,14 +82,14 @@ class Camp
         return $this;
     }
 
-    public function getQuote(): ?string
+    public function getTitle(): ?string
     {
-        return $this->quote;
+        return $this->title;
     }
 
-    public function setQuote(string $quote): self
+    public function setTitle(string $title): self
     {
-        $this->quote = $quote;
+        $this->title = $title;
 
         return $this;
     }
@@ -163,30 +142,6 @@ class Camp
         return $this;
     }
 
-    public function getDescription(): ?string
-    {
-        return $this->description;
-    }
-
-    public function setDescription(string $description): self
-    {
-        $this->description = $description;
-
-        return $this;
-    }
-
-    public function getSlug(): ?string
-    {
-        return $this->slug;
-    }
-
-    public function setSlug(string $slug): self
-    {
-        $this->slug = $slug;
-
-        return $this;
-    }
-
     /**
      * @return Collection|Comment[]
      */
@@ -199,7 +154,7 @@ class Camp
     {
         if (!$this->comments->contains($comment)) {
             $this->comments[] = $comment;
-            $comment->setCampId($this);
+            $comment->setCamp($this);
         }
 
         return $this;
@@ -210,8 +165,8 @@ class Camp
         if ($this->comments->contains($comment)) {
             $this->comments->removeElement($comment);
             // set the owning side to null (unless already changed)
-            if ($comment->getCampId() === $this) {
-                $comment->setCampId(null);
+            if ($comment->getCamp() === $this) {
+                $comment->setCamp(null);
             }
         }
 

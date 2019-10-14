@@ -23,52 +23,57 @@
                     <div class="row">
                         <div class="col-sm-12">
                             <div class="article-text">
-                                {{ camp.description }}
+                                {{ camp.translations[locale].description }}
                             </div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-12">
-                            <p class="share-icons mb-5"><span class="pr-1">Delen:</span> <i class="pr-1 fa fa-facebook-square"></i><i class="pr-1 fa fa-twitter-square"></i><i class="pr-1 fa fa-reddit-square"></i><i class="pr-1 fa fa-share-alt-square"></i></p>
+                            <p class="share-icons mb-5"><span class="pr-1">{{ 'Delen'|trans }}:</span> <i class="pr-1 fa fa-facebook-square"></i><i class="pr-1 fa fa-twitter-square"></i><i class="pr-1 fa fa-reddit-square"></i><i class="pr-1 fa fa-share-alt-square"></i></p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-12">
-                            <h3><i class="pr-3 fa fa-comment"></i>{{ camp.comments|length }} Reacties</h3>
+                            <h3><i class="pr-3 fa fa-comment"></i>{{ camp.comments|length }} {{ 'Reacties'|trans }}</h3>
                             <hr>
 
                             <div class="row mb-5">
                                 <div class="col-sm-12">
                                     <img class="comment-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
                                     <div class="comment-container d-inline-block pl-3 align-top">
-                                        <form action="{{ path('addComment', {camp_id: camp.id}) }}" method="post">
-                                            <div class="form-group">
-                                                <input type="text" name="author" id="name" class="form-control" placeholder="Name">
-                                            </div>
-                                            <div class="form-group">
-                                                <textarea class="form-control comment-form" name="content" id="articleText" rows="1"></textarea>
-                                            </div>
-                                            <button type="submit" class="btn btn-info">Plaats reactie</button>
-                                        </form>
+                                        {{ form_start(comment_form) }}
+                                            {{ form_row(comment_form.author) }}
+                                            {{ form_row(comment_form.content) }}
+                                            {{ form_row(comment_form.save) }}
+                                        {{ form_end(comment_form) }}
+{#                                        <form action="" method="post">#}
+{#                                            <div class="form-group">#}
+{#                                                <input type="text" name="author" id="name" class="form-control" placeholder="Name">#}
+{#                                            </div>#}
+{#                                            <div class="form-group">#}
+{#                                                <textarea class="form-control comment-form" name="content" id="articleText" rows="1"></textarea>#}
+{#                                            </div>#}
+{#                                            <button type="submit" class="btn btn-info">Plaats reactie</button>#}
+{#                                        </form>#}
                                     </div>
                                 </div>
                             </div>
 
-                            {% for comment in camp.comments %}
 
+                            {% for comment in camp.comments %}
                             <div class="row">
                                 <div class="col-sm-12">
                                     <img class="comment-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
                                     <div class="comment-container d-inline-block pl-3 align-top">
                                         <span class="commenter-name">{{ comment.author }}</span>
                                         <br>
-                                        <span class="comment"> {{ comment.content }}</span>
-                                        <p><a href="#">Reageer</a></p>
+                                        <span class="comment">{{ comment.content }}</span>
+                                        <p><a href="#">{{ 'Reageer'|trans }}</a></p>
                                     </div>
                                 </div>
                             </div>
-
                             {% endfor %}
+
                         </div>
                     </div>
                 </div>
@@ -80,53 +85,79 @@
 {% block javascripts %}
     {{ parent() }}
     <script>
+        const heart = document.querySelector("#like-heart-button")
+        const likeCount = document.querySelector('#like-counter')
 
-        const likeBtn = document.querySelector("#like-heart-button")
-
-        const changeIcon = (status) => {
-            console.log(status)
-            if(status !== false) {
-                likeBtn.classList.remove("fa-heart-o")
-                likeBtn.classList.add("fa-heart")
+        changeIcon = (value) => {
+            if(value === true) {
+                heart.classList.remove('fa-heart-o')
+                heart.classList.add('fa-heart')
             } else {
-                likeBtn.classList.remove("fa-heart")
-                likeBtn.classList.add("fa-heart-o")
+                heart.classList.remove('fa-heart')
+                heart.classList.add('fa-heart-o')
             }
         }
 
-        async function changeLike () {
-            let like
-            if(window.localStorage.getItem("{{ camp.slug }}")) {
-                like = JSON.parse(window.localStorage.getItem("{{ camp.slug }}"))
-            } else {
-                like = false
-            }
-            let url = '{{ path("likeCamp", {slug: camp.slug, status: 'likeStatus'}) }}'
-            url = url.replace('likeStatus', like)
-            const status = await fetch(url, {
-                method: 'GET',
-            })
-            const newStatus = await status.json()
-            changeIcon(newStatus.status)
-            window.localStorage.setItem("{{ camp.slug }}", JSON.stringify(newStatus.status))
+        changeCounter = (count) => {
+            likeCount.innerHTML = count;
         }
 
-        likeBtn.addEventListener('click', (e) => {
+        saveState = (state) => {
+            window.localStorage.setItem({{ camp.id }}, state)
+        }
+
+        getState = (key) => {
+            return JSON.parse(window.localStorage.getItem(key))
+        }
+
+        // Check if value exists in localstorage
+        let value = false;
+        if(window.localStorage.getItem({{ camp.id }})) {
+            // if value exists change icon accordingly
+            value = getState({{ camp.id }})
+            if(value === false || value === "false") {
+                heart.classList.add('fa-heart-o')
+            } else {
+                heart.classList.add('fa-heart')
+            }
+        } else {
+            // else apply default (empty)
+            value = false
+            heart.classList.add('fa-heart-o')
+        }
+
+
+        // on click of heart button
+        heart.addEventListener('click', async function(e) {
             e.preventDefault()
-            changeLike()
-        })
-
-        document.addEventListener('DOMContentLoaded', () => {
-            let status
-            if(window.localStorage.getItem("{{ camp.slug }}")) {
-                status = JSON.parse(window.localStorage.getItem("{{ camp.slug }}"))
-                console.log(status)
-                changeIcon(status)
+            let value
+            // check if value exists in localstorage
+            if(window.localStorage.getItem({{ camp.id }})) {
+                //if value exists, load value and change it
+                value = getState({{ camp.id }})
             } else {
-                likeBtn.classList.add("fa-heart-o")
+                // else create value
+                value = false
             }
-        })
+            const newValue = !value;
 
+            // fetch route to apply/remove like on camp
+            try {
+                const response = await fetch("{{ path('likeCamp', {'_locale': locale, 'id': camp.id}) }}", {
+                    method: 'POST',
+                    body: JSON.stringify({'liked': newValue}),
+                })
+                const data = await response.json()
+                changeIcon(data.liked)
+                changeCounter(data.likes)
+                saveState(data.liked)
+            } catch (err) {
+                console.error(err)
+            }
+
+            // store new value in localstorage
+
+        })
 
     </script>
 {% endblock %}

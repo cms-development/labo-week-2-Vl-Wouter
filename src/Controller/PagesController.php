@@ -5,9 +5,13 @@ namespace App\Controller;
 
 
 use App\Entity\Camp;
+use App\Entity\Comment;
 use DateTime;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -15,10 +19,32 @@ use Symfony\Component\Routing\Annotation\Route;
 class PagesController extends AbstractController
 {
     /**
-     * @Route("/", name="index", methods={"GET"})
+     * @Route("/", name="start")
+     * @param Request $r
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     */
+    public function start(Request $r) {
+        $locale = $r->getLocale();
+        if($locale !== "nl" || $locale !== "en") {
+            $locale = $r->getDefaultLocale();
+        }
+        return $this->redirectToRoute("index", ["_locale" => $locale]);
+    }
+
+    /**
+     * @Route(
+     *     "/{_locale}/",
+     *     locale="nl",
+     *     requirements={
+     *          "_locale": "nl|en"
+     *     },
+     *     name="index"
+     * )
+     * @param Request $r
      * @return Response
      */
-    public function index() {
+    public function index(Request $r) {
+        $locale = $r->getLocale();
         $camps = $this->getDoctrine()->getRepository(Camp::class)->findBy(array(), array('id' => 'desc'), 4);
         $featured = $this->getDoctrine()->getRepository(Camp::class)->findBy(["featured" => 1]);
         shuffle($featured);
@@ -31,51 +57,44 @@ class PagesController extends AbstractController
             throw $this->createNotFoundException('No featured camps available');
         }
 
-        return $this->render('pages/index.html.twig', ['camps' => $camps, 'featured' => $featured[0]]);
+        return $this->render('pages/index.html.twig', ['locale' => $locale, 'camps' => $camps, 'featured' => $featured[0]]);
     }
 
     /**
-     * @param string $slug
-     * @Route("/camp/{slug}", name="camp", methods={"GET"})
-     * @return Response
-     */
-    public function show($slug) {
-        $camp = $this->getDoctrine()->getRepository(Camp::class)->findOneBy(["slug" => $slug]);
-
-        return $this->render('pages/camp.html.twig', ['camp' => $camp]);
-    }
-
-    /**
-     * @Route("/admin/camps/new", name="newCamp", methods={"GET", "POST"})
+     * @param $id
      * @param Request $r
      * @return Response
-     * @throws Exception
+     * @Route("/{_locale}/camp/{id}", locale="nl", requirements={"_locale": "nl|en"}, name="camp", methods={"GET", "POST"})
      */
-    public function addCamp(Request $r) {
-        if($r->isMethod('GET')) {
-            return $this->render('cms/campForm.html.twig');
-        } else if($r->isMethod('POST')) {
+    public function show($id, Request $r) {
+        $locale = $r->getLocale();
+        $camp = $this->getDoctrine()->getRepository(Camp::class)->find($id);
+
+        $comment = new Comment();
+
+        $comment_form = $this->createFormBuilder($comment)
+                            ->add('author', TextType::class)
+                            ->add('content', TextareaType::class)
+                            ->add('save', SubmitType::class)
+                            ->getForm();
+
+        $comment_form->handleRequest($r);
+
+        if($comment_form->isSubmitted() && $comment_form->isValid()) {
+            $comment = $comment_form->getData();
+            $comment->setCamp($camp);
+
             $manager = $this->getDoctrine()->getManager();
-
-            $camp = new Camp();
-            $camp->setTitle($_POST["title"]);
-            $camp->setSlug(strtolower(str_replace(" ", "-", $_POST['title'])));
-            $camp->setAuthor("TestGebruiker");
-            $camp->setQuote($_POST["quote"]);
-            $camp->setDate(new DateTime($_POST["date"]));
-            $camp->setImage($_POST["image"]);
-            $camp->setDescription($_POST["description"]);
-            $camp->setLikes(0);
-            if(array_key_exists("featured", $_POST)) {
-                $camp->setFeatured($_POST["featured"]);
-            }
-
-            $manager->persist($camp);
-
+            $manager->persist($comment);
             $manager->flush();
 
-            return $this->redirectToRoute('index', [], 301);
-
+            return $this->redirectToRoute('camp', ['_locale' => $locale, 'id' => $camp->getId()]);
         }
+
+        return $this->render('pages/camp.html.twig', [
+            'locale' => $locale,
+            'camp' => $camp,
+            'comment_form' => $comment_form->createView(),
+        ]);
     }
 }

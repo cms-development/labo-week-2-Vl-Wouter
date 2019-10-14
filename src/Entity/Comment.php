@@ -30,7 +30,7 @@ class Comment
      * @ORM\ManyToOne(targetEntity="App\Entity\Camp", inversedBy="comments")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $camp_id;
+    private $camp;
 
     public function getId(): ?int
     {
@@ -61,14 +61,14 @@ class Comment
         return $this;
     }
 
-    public function getCampId(): ?Camp
+    public function getCamp(): ?Camp
     {
-        return $this->camp_id;
+        return $this->camp;
     }
 
-    public function setCampId(?Camp $camp_id): self
+    public function setCamp(?Camp $camp): self
     {
-        $this->camp_id = $camp_id;
+        $this->camp = $camp;
 
         return $this;
     }

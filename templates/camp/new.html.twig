@@ -1,0 +1,32 @@
+{% extends 'cms.html.twig' %}
+
+
+{% block body %}
+    <div class="container">
+        {{ form_start(form, {"attr": {"novalidate": "novalidate"}}) }}
+            {{ form_row(form.author) }}
+            {{ form_row(form.title) }}
+            {{ form_row(form.date) }}
+            {{ form_row(form.image) }}
+            {{ form_row(form.featured) }}
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a href="#nl-form" class="nav-link active" role="tab" data-toggle="tab">NL</a>
+                </li><li class="nav-item">
+                    <a href="#en-form" class="nav-link" role="tab" data-toggle="tab">EN</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="nl-form">
+                    {{ form_row(form_nl.nl_description) }}
+                    {{ form_row(form_nl.nl_quote) }}
+                </div>
+                <div class="tab-pane fade in" id="en-form">
+                    {{ form_row(form_en.en_description) }}
+                    {{ form_row(form_en.en_quote) }}
+                </div>
+            </div>
+            {{ form_row(form_en.save) }}
+        {{ form_end(form) }}
+    </div>
+{% endblock %}
